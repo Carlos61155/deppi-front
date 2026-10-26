@@ -39,7 +39,7 @@ export function AppSidebar() {
     <Sidebar className="border-r bg-[#f5f4f0]">
       <SidebarHeader className="px-5 py-6">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <span className="flex size-10 items-center justify-center rounded-xl bg-orange-700 font-bold text-white">
+          <span className="flex size-10 items-center justify-center rounded-xl bg-[var(--verde-if)] font-bold text-white">
             D
           </span>
           <span>

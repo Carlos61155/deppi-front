@@ -94,10 +94,13 @@ export default function DashboardPage() {
   }
 
   const metrics = [
+    {label: "Usuários", value: report.totalUsers},
     { label: "Alunos", value: report.totalStudents },
     { label: "Professores/servidores", value: report.totalCivilServants },
     { label: "Cursos", value: report.totalCourses },
     { label: "Inscrições", value: report.totalEnrollments },
+    { label: "Instituições", value: report.totalCampus },
+    { label: "Vagas restantes", value: report.totalRemainingSpots },
   ];
 
   const maxStatus = Math.max(1, ...statuses.map((item) => item.total));
@@ -122,7 +125,7 @@ export default function DashboardPage() {
 
       <section
         aria-label="Indicadores gerais"
-        className="grid overflow-hidden rounded-xl border bg-card sm:grid-cols-2 xl:grid-cols-4"
+        className="grid overflow-hidden rounded-xl border bg-card sm:grid-cols-2 xl:grid-cols-7"
       >
         {metrics.map((metric) => (
           <div key={metric.label} className="border-b p-5 xl:border-b-0 xl:border-r">

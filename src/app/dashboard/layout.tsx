@@ -25,7 +25,7 @@ export default function DashboardLayout({
           <div className="ml-auto flex items-center gap-4">
             <span className="text-right">
               <span className="block text-sm font-semibold">Administrador</span>
-              <span className="block text-[10px] font-bold tracking-widest text-orange-700">
+              <span className="block text-[10px] font-bold tracking-widest text-[var(--verde-if)]">
                 ADMIN
               </span>
             </span>
