@@ -7,6 +7,7 @@ import {
   Building2,
   GraduationCap,
   House,
+  LogOut,
   UserRound,
   Users,
 } from "lucide-react";
@@ -14,6 +15,7 @@ import {
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -22,6 +24,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+
+import { useRouter } from "next/navigation";
 
 const items = [
   { title: "Início", url: "/dashboard", icon: House },
@@ -34,6 +38,12 @@ const items = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  function logout() {
+    localStorage.removeItem("token");
+    router.replace("/login");
+  }
 
   return (
     <Sidebar className="border-r bg-[#f5f4f0]">
@@ -67,14 +77,12 @@ export function AppSidebar() {
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
-                      asChild
+                      render={<Link href={item.url} />}
                       isActive={active}
                       className="h-12 rounded-lg px-4 data-[active=true]:bg-orange-100 data-[active=true]:text-orange-800"
                     >
-                      <Link href={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </Link>
+                      <item.icon />
+                      <span>{item.title}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -83,6 +91,17 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="px-3 pb-4">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={logout}>
+              <LogOut />
+              <span>Sair</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
