@@ -20,7 +20,28 @@ interface EnrollmentStatusReport {
   status: string;
   total: number;
 }
+type EnrollmentStatus =
+  | "PENDING"
+  | "APPROVED"
+  | "REJECTED"
+  | "CANCELED";
 
+interface EnrollmentItem {
+  id: string;
+  status: EnrollmentStatus;
+  createdAt: string;
+  course: {
+    id: string;
+    title: string;
+  };
+  student: {
+    user: {
+      id: string;
+      name: string;
+      email: string;
+    };
+  };
+}
 const enrollmentLabels: Record<
   string,
   { label: string; color: string; icon: typeof Clock3 }
@@ -34,6 +55,9 @@ const enrollmentLabels: Record<
 export default function DashboardPage() {
   const [report, setReport] = useState<GeneralReport | null>(null);
   const [statuses, setStatuses] = useState<EnrollmentStatusReport[]>([]);
+const [selectedStatus, setSelectedStatus] =useState<EnrollmentStatus>("PENDING");
+const [enrollments, setEnrollments] = useState<EnrollmentItem[]>([]);
+const [enrollmentsLoading, setEnrollmentsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [forbidden, setForbidden] = useState(false);
@@ -64,6 +88,24 @@ export default function DashboardPage() {
 
     void loadDashboard();
   }, []);
+useEffect(() => {
+  async function loadEnrollments() {
+    setEnrollmentsLoading(true);
+
+    try {
+      const response = await api.get<EnrollmentItem[]>(
+        `enrollments/status/${selectedStatus}`,
+      );
+      setEnrollments(response.data);
+    } catch {
+      setEnrollments([]);
+    } finally {
+      setEnrollmentsLoading(false);
+    }
+  }
+
+  void loadEnrollments();
+}, [selectedStatus]);
 
   if (loading) {
     return <main className="p-8">Carregando o painel...</main>;
@@ -197,6 +239,49 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </section>
+      <section className="space-y-4">
+  <h2 className="text-xl font-semibold">Inscrições por situação</h2>
+
+  <label className="flex flex-wrap items-center gap-3">
+    <span className="text-sm">Situação:</span>
+    <select
+      value={selectedStatus}
+      onChange={(event) =>
+        setSelectedStatus(event.target.value as EnrollmentStatus)
+      }
+      className="rounded-md border bg-background px-3 py-2"
+    >
+      <option value="PENDING">Pendentes</option>
+      <option value="APPROVED">Deferidas</option>
+      <option value="REJECTED">Indeferidas</option>
+      <option value="CANCELED">Canceladas</option>
+    </select>
+  </label>
+
+  {enrollmentsLoading ? (
+    <p>Carregando inscrições...</p>
+  ) : enrollments.length === 0 ? (
+    <p className="text-sm text-muted-foreground">
+      Nenhuma inscrição encontrada nessa situação.
+    </p>
+  ) : (
+    <div className="space-y-3">
+      {enrollments.map((enrollment) => (
+        <article key={enrollment.id} className="rounded-lg border p-4">
+          <p className="font-medium">{enrollment.student.user.name}</p>
+          <p className="text-sm text-muted-foreground">
+            {enrollment.student.user.email}
+          </p>
+          <p className="mt-2 text-sm">Curso: {enrollment.course.title}</p>
+          <p className="text-sm">
+            Inscrição em:{" "}
+            {new Date(enrollment.createdAt).toLocaleDateString("pt-BR")}
+          </p>
+        </article>
+      ))}
+    </div>
+  )}
+</section>
     </main>
   );
 }
