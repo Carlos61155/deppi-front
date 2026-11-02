@@ -15,7 +15,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ChartColumn, Clock3, CircleCheck, CircleX } from "lucide-react";
-
+import { CourseStatusReport } from "@/services/dashboardService";
+import { GetCoursesByStatusReport } from "@/services/dashboardService";
 interface EnrollmentStatusReport {
   status: string;
   total: number;
@@ -24,43 +25,38 @@ type EnrollmentStatus =
   | "PENDING"
   | "APPROVED"
   | "REJECTED"
-  | "CANCELED";
+  | "ACTIVE"
+  | "CANCELED"
+  | "COMPLETED";
 
-interface EnrollmentItem {
-  id: string;
-  status: EnrollmentStatus;
-  createdAt: string;
-  course: {
-    id: string;
-    title: string;
-  };
-  student: {
-    user: {
-      id: string;
-      name: string;
-      email: string;
-    };
-  };
-}
 const enrollmentLabels: Record<
   string,
-  { label: string; color: string; icon: typeof Clock3 }
+  { label: string; color: string; textColor: string; icon: typeof Clock3 }
 > = {
-  PENDING: { label: "Pendente", color: "bg-amber-600", icon: Clock3 },
-  APPROVED: { label: "Deferida", color: "bg-green-600", icon: CircleCheck },
-  REJECTED: { label: "Indeferida", color: "bg-red-600", icon: CircleX },
-  CANCELED: { label: "Cancelada", color: "bg-gray-500", icon: CircleX },
+  PENDING: { label: "Pendente", color: "bg-amber-700", textColor: "text-amber-700", icon: Clock3 },
+  APPROVED: { label: "Deferida", color: "bg-green-700", textColor: "text-green-700", icon: CircleCheck },
+  REJECTED: { label: "Indeferida", color: "bg-red-700", textColor: "text-red-700", icon: CircleX },
+  ACTIVE: { label: "Em andamento", color: "bg-blue-600", textColor: "text-blue-700", icon: Clock3 },
+  COMPLETED: { label: "Concluída", color: "bg-teal-600", textColor: "text-teal-700", icon: CircleCheck },
+  CANCELED: { label: "Cancelada", color: "bg-gray-500", textColor: "text-gray-600", icon: CircleX },
 };
+const allEnrollmentStatuses: EnrollmentStatus[] = [
+  "PENDING",
+  "APPROVED",
+  "REJECTED",
+  "ACTIVE",
+  "COMPLETED",
+  "CANCELED",
+];
 
 export default function DashboardPage() {
   const [report, setReport] = useState<GeneralReport | null>(null);
   const [statuses, setStatuses] = useState<EnrollmentStatusReport[]>([]);
-const [selectedStatus, setSelectedStatus] =useState<EnrollmentStatus>("PENDING");
-const [enrollments, setEnrollments] = useState<EnrollmentItem[]>([]);
-const [enrollmentsLoading, setEnrollmentsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [forbidden, setForbidden] = useState(false);
+  const [courseStatuses, setCourseStatuses] = useState<CourseStatusReport[]>([]);
+  const [courseStatusError, setCourseStatusError] = useState(false);
 
   useEffect(() => {
     async function loadDashboard() {
@@ -88,24 +84,19 @@ const [enrollmentsLoading, setEnrollmentsLoading] = useState(false);
 
     void loadDashboard();
   }, []);
-useEffect(() => {
-  async function loadEnrollments() {
-    setEnrollmentsLoading(true);
 
+useEffect(() => {
+  async function loadCourseStatuses() {
     try {
-      const response = await api.get<EnrollmentItem[]>(
-        `enrollments/status/${selectedStatus}`,
-      );
-      setEnrollments(response.data);
+      const result = await GetCoursesByStatusReport();
+      setCourseStatuses(result);
     } catch {
-      setEnrollments([]);
-    } finally {
-      setEnrollmentsLoading(false);
+      setCourseStatusError(true);
     }
   }
 
-  void loadEnrollments();
-}, [selectedStatus]);
+  void loadCourseStatuses();
+}, []);
 
   if (loading) {
     return <main className="p-8">Carregando o painel...</main>;
@@ -145,7 +136,43 @@ useEffect(() => {
     { label: "Vagas restantes", value: report.totalRemainingSpots },
   ];
 
-  const maxStatus = Math.max(1, ...statuses.map((item) => item.total));
+  const displayedStatuses = allEnrollmentStatuses.map((status) => ({
+    status,
+    total: statuses.find((item) => item.status === status)?.total ?? 0,
+  }));
+  const maxStatus = Math.max(1, ...displayedStatuses.map((item) => item.total));
+const courseStatusConfig = {
+  UNDER_REVIEW: { label: "Em análise", color: "#c45a00" },
+  IN_PROGRESS: { label: "Em andamento", color: "#16803c" },
+  COMPLETED: { label: "Concluído", color: "#2453e6" },
+  CLOSED: { label: "Fechado", color: "#9ca3af" },
+} as const;
+
+const courseStatusItems = Object.entries(courseStatusConfig).map(
+  ([status, config]) => ({
+    status,
+    ...config,
+    total:
+      courseStatuses.find((item) => item.status === status)?.total ?? 0,
+  }),
+);
+
+const courseTotal = courseStatusItems.reduce(
+  (sum, item) => sum + item.total,
+  0,
+);
+
+let currentPercent = 0;
+const donutStops =
+  courseTotal === 0
+    ? "#e5e7eb 0% 100%"
+    : courseStatusItems
+        .map((item) => {
+          const start = currentPercent;
+          currentPercent += (item.total / courseTotal) * 100;
+          return `${item.color} ${start}% ${currentPercent}%`;
+        })
+        .join(", ");
 
   return (
     <main className="space-y-7 p-6 md:p-10">
@@ -186,15 +213,11 @@ useEffect(() => {
           </CardHeader>
 
           <CardContent className="space-y-5">
-            {statuses.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Nenhuma inscrição encontrada.
-              </p>
-            ) : (
-              statuses.map((item) => {
+            {displayedStatuses.map((item) => {
                 const config = enrollmentLabels[item.status] ?? {
                   label: item.status,
                   color: "bg-gray-500",
+                  textColor: "text-gray-600",
                   icon: Clock3,
                 };
                 const Icon = config.icon;
@@ -205,7 +228,7 @@ useEffect(() => {
                     key={item.status}
                     className="grid grid-cols-[130px_1fr_60px] items-center gap-3"
                   >
-                    <span className="flex items-center gap-2 text-sm">
+                    <span className={`flex items-center gap-2 text-sm ${config.textColor}`}>
                       <Icon className="size-4" />
                       {config.label}
                     </span>
@@ -222,8 +245,7 @@ useEffect(() => {
                     </span>
                   </div>
                 );
-              })
-            )}
+              })}
           </CardContent>
         </Card>
 
@@ -231,57 +253,48 @@ useEffect(() => {
           <CardHeader>
             <CardTitle>Cursos por situação</CardTitle>
           </CardHeader>
-          <CardContent className="flex min-h-56 items-center justify-center">
-            <p className="text-center text-sm text-muted-foreground">
-              Para exibir este gráfico, conecte aqui o endpoint de cursos por
-              situação da sua API.
-            </p>
-          </CardContent>
-        </Card>
-      </section>
-      <section className="space-y-4">
-  <h2 className="text-xl font-semibold">Inscrições por situação</h2>
-
-  <label className="flex flex-wrap items-center gap-3">
-    <span className="text-sm">Situação:</span>
-    <select
-      value={selectedStatus}
-      onChange={(event) =>
-        setSelectedStatus(event.target.value as EnrollmentStatus)
-      }
-      className="rounded-md border bg-background px-3 py-2"
-    >
-      <option value="PENDING">Pendentes</option>
-      <option value="APPROVED">Deferidas</option>
-      <option value="REJECTED">Indeferidas</option>
-      <option value="CANCELED">Canceladas</option>
-    </select>
-  </label>
-
-  {enrollmentsLoading ? (
-    <p>Carregando inscrições...</p>
-  ) : enrollments.length === 0 ? (
+        <CardContent>
+  {courseStatusError ? (
     <p className="text-sm text-muted-foreground">
-      Nenhuma inscrição encontrada nessa situação.
+      Não foi possível carregar as situações dos cursos.
     </p>
   ) : (
-    <div className="space-y-3">
-      {enrollments.map((enrollment) => (
-        <article key={enrollment.id} className="rounded-lg border p-4">
-          <p className="font-medium">{enrollment.student.user.name}</p>
-          <p className="text-sm text-muted-foreground">
-            {enrollment.student.user.email}
-          </p>
-          <p className="mt-2 text-sm">Curso: {enrollment.course.title}</p>
-          <p className="text-sm">
-            Inscrição em:{" "}
-            {new Date(enrollment.createdAt).toLocaleDateString("pt-BR")}
-          </p>
-        </article>
-      ))}
+    <div className="flex flex-wrap items-center justify-center gap-8 py-2">
+      <div
+        className="relative size-48 shrink-0 rounded-full"
+        style={{ background: `conic-gradient(${donutStops})` }}
+        aria-label={`Total de ${courseTotal} cursos`}
+      >
+        <div className="absolute inset-8 flex flex-col items-center justify-center rounded-full bg-card">
+          <strong className="text-3xl">{courseTotal}</strong>
+          <span className="text-sm text-muted-foreground">cursos</span>
+        </div>
+      </div>
+
+      <div className="min-w-48 space-y-3">
+        {courseStatusItems.map((item) => (
+          <div
+            key={item.status}
+            className="flex items-center justify-between gap-6"
+          >
+            <span className="flex items-center gap-2">
+              <span
+                className="size-3 rounded-full"
+                style={{ backgroundColor: item.color }}
+              />
+              {item.label}
+            </span>
+            <span className="font-medium">
+              {item.total.toLocaleString("pt-BR")}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   )}
-</section>
+</CardContent>
+        </Card>
+      </section>
     </main>
   );
 }
