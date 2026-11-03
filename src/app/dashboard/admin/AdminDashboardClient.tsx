@@ -2,21 +2,21 @@
 
 import { useEffect, useState } from "react";
 import api from "@/api/axios";
-import { getCurrentUser } from "@/services/authService";
 import {
+    CourseStatusReport,
+    GetCoursesByStatusReport,
   GetGeneralReport,
   type GeneralReport,
 } from "@/services/dashboardService";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { ChartColumn, Clock3, CircleCheck, CircleX } from "lucide-react";
-import { CourseStatusReport } from "@/services/dashboardService";
-import { GetCoursesByStatusReport } from "@/services/dashboardService";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartColumn, Clock3, CircleCheck, CircleX} from "lucide-react";
+import { AuthUser } from "@/lib/auth/types";
+
+interface AdminDashboardClientProps{
+    user: AuthUser
+}
+
 interface EnrollmentStatusReport {
   status: string;
   total: number;
@@ -49,25 +49,19 @@ const allEnrollmentStatuses: EnrollmentStatus[] = [
   "CANCELED",
 ];
 
-export default function AdminDashboardClient() {
+export default function AdminDashboardClient({
+    user,
+}: AdminDashboardClientProps) {
   const [report, setReport] = useState<GeneralReport | null>(null);
   const [statuses, setStatuses] = useState<EnrollmentStatusReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [forbidden, setForbidden] = useState(false);
   const [courseStatuses, setCourseStatuses] = useState<CourseStatusReport[]>([]);
   const [courseStatusError, setCourseStatusError] = useState(false);
 
   useEffect(() => {
     async function loadDashboard() {
       try {
-        const user = await getCurrentUser();
-
-        if (!user.roles.includes("ADMIN")) {
-          setForbidden(true);
-          return;
-        }
-
         const [generalReport, statusResponse] = await Promise.all([
           GetGeneralReport(),
           api.get<EnrollmentStatusReport[]>("enrollments/enrollment/status"),
@@ -102,17 +96,6 @@ useEffect(() => {
     return <main className="p-8">Carregando o painel...</main>;
   }
 
-  if (forbidden) {
-    return (
-      <main className="p-8">
-        <h1 className="text-2xl font-bold">403 — Acesso negado</h1>
-        <p className="text-muted-foreground">
-          Este painel está disponível apenas para administradores.
-        </p>
-      </main>
-    );
-  }
-
   if (error || !report) {
     return (
       <main className="p-8">
@@ -127,7 +110,7 @@ useEffect(() => {
   }
 
   const metrics = [
-    {label: "Usuários", value: report.totalUsers},
+    { label: "Usuários", value: report.totalUsers },
     { label: "Alunos", value: report.totalStudents },
     { label: "Professores/servidores", value: report.totalCivilServants },
     { label: "Cursos", value: report.totalCourses },
@@ -178,9 +161,7 @@ const donutStops =
     <main className="space-y-7 p-6 md:p-10">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Bom dia, administrador
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">Bom dia, {user.name}</h1>
           <p className="mt-1 text-muted-foreground">
             Visão geral da plataforma DEPPI
           </p>

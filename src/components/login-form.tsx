@@ -43,12 +43,10 @@ export function LoginForm({
         password,
       });
 
-      localStorage.setItem("token", data.token);
-
       const user = await getCurrentUser();
 
       const roleHomeRoutes = [
-        { role: "ADMIN", path: "/dashboard" },
+        { role: "ADMIN", path: "/dashboard/admin" },
         { role: "ALUNO", path: "/dashboard/aluno" },
         { role: "PROFESSOR", path: "/dashboard/professor" },
         { role: "DEPPI", path: "/dashboard/deppi" },
