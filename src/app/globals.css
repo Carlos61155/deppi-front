@@ -48,15 +48,11 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --verde-if: #2f9e41;
-    --vermelho-if: #cd191e;
-    --preto-if: #000000;
-  }
-}
 
 :root {
+  --verde-if: #2f9e41;
+  --vermelho-if: #cd191e;
+  --preto-if: #000000;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -129,9 +125,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
   }
