@@ -1,6 +1,6 @@
 export type Role = "ADMIN" | "DEPPI" | "PROFESSOR" | "ALUNO";
 
-export type Permission = "MANAGE_USERS" | "MANAGE_ROLES";
+export type Permission = "MANAGE_USERS" | "MANAGE_ROLES" | "DEPPI_ROLES";
 
 export type AuthUser = {
   id: string;
