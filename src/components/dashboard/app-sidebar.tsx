@@ -25,8 +25,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-import { useRouter } from "next/navigation";
-import api from "@/api/axios";
+import { logout } from "@/app/dashboard/actions";
 
 const items = [
   { title: "Início", url: "/dashboard", icon: House },
@@ -39,16 +38,11 @@ const items = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
 
-  async function logout() {
-  try {
-    await api.post("auth/logout");
-    router.replace("/login");
-  } catch (error) {
-    console.error("Não foi possível encerrar a sessão:", error);
-  }
+ async function handleLogout() {
+  await logout();
 }
+
 
   return (
     <Sidebar className="border-r bg-[#f5f4f0]">
@@ -100,7 +94,7 @@ export function AppSidebar() {
       <SidebarFooter className="px-3 pb-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={logout}>
+            <SidebarMenuButton onClick={handleLogout}>
               <LogOut />
               <span>Sair</span>
             </SidebarMenuButton>
