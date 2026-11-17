@@ -2,6 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
+import { ShieldPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Can } from "@/components/auth/Can";
+import { GrantRoleDialog } from "@/components/auth/GrantRoleDialog";
+import type { AvailableRole } from "@/services/dashboardService";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -26,6 +31,7 @@ export default function UsuariosDashboardClient({
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
 
   useEffect(() => {
     async function loadUsers() {
@@ -97,6 +103,7 @@ export default function UsuariosDashboardClient({
                 <TableHead>E-mail</TableHead>
                 <TableHead>Cargos</TableHead>
                 <TableHead>Criado em</TableHead>
+                <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -112,13 +119,25 @@ export default function UsuariosDashboardClient({
                   <TableCell>
                     {new Date(user.createdAt).toLocaleDateString("pt-BR")}
                   </TableCell>
+                  <TableCell>
+                  <Can permissions={["MANAGE_USERS"]}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setSelectedUser(user)}
+                    >
+                      <ShieldPlus />
+                      Conceder cargo
+                    </Button>
+                  </Can>
+                </TableCell>
                 </TableRow>
               ))}
 
               {filteredUsers.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={5}
                     className="h-24 text-center text-muted-foreground"
                   >
                     Nenhum usuário encontrado.
@@ -127,6 +146,35 @@ export default function UsuariosDashboardClient({
               )}
             </TableBody>
           </Table>
+          <GrantRoleDialog
+            user={selectedUser}
+            onClose={() => setSelectedUser(null)}
+            onGranted={(userId, grantedRole: AvailableRole) => {
+              setUsers((currentUsers) =>
+                currentUsers.map((user) => {
+                  if (user.id !== userId) return user;
+
+                  const alreadyHasRole = user.roles.some(
+                    (role) => role.slug === grantedRole.slug,
+                  );
+
+                  if (alreadyHasRole) return user;
+
+                  return {
+                    ...user,
+                    roles: [
+                      ...user.roles,
+                      {
+                        id: grantedRole.id,
+                        name: grantedRole.name,
+                        slug: grantedRole.slug,
+                      },
+                    ],
+                  };
+                }),
+              );
+            }}
+          />
         </div>
       )}
     </main>
