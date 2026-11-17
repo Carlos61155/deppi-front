@@ -6,12 +6,14 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
+import { requireUser } from "@/lib/auth/authorize";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: ReactNode;
 }) {
+  const user = await requireUser();
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -24,7 +26,7 @@ export default function DashboardLayout({
 
           <div className="ml-auto flex items-center gap-4">
             <span className="text-right">
-              <span className="block text-sm font-semibold">Administrador</span>
+              <span className="block text-sm font-semibold">{user.name}</span>
               <span className="block text-[10px] font-bold tracking-widest text-[var(--verde-if)]">
                 ADMIN
               </span>
