@@ -10,11 +10,6 @@ export interface GeneralReport {
   totalRemainingSpots: number;
 }
 
-export interface UserRole {
-  name: string;
-  slug: string;
-}
-
 export interface UserRow {
   id: string;
   name: string;
@@ -26,6 +21,29 @@ export interface UserRow {
 export interface UsersResponse {
   data: UserRow[];
   total: number;
+}
+
+export interface UserRole {
+  id?: string;
+  name: string;
+  slug: string;
+}
+
+export interface AvailableRole extends UserRole {
+  id: string;
+  slug: "ALUNO" | "DEPPI" | "ADMIN" | "PROFESSOR";
+}
+
+export async function GetRoles(): Promise<AvailableRole[]> {
+  const response = await api.get<AvailableRole[]>("/roles");
+  return response.data;
+}
+
+export async function AssignRole(
+  userId: string,
+  roleId: string,
+): Promise<void> {
+  await api.post(`/users/${userId}/roles/${roleId}`);
 }
 
 export async function GetGeneralReport(): Promise<GeneralReport> {

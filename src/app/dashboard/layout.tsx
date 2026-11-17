@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { requireUser } from "@/lib/auth/authorize";
+import { AuthProvider } from "@/contexts/authContext";
 
 export default async function DashboardLayout({
   children,
@@ -15,30 +16,32 @@ export default async function DashboardLayout({
 }) {
   const user = await requireUser();
   return (
-    <SidebarProvider>
-      <AppSidebar />
+    <AuthProvider user={user}>
+      <SidebarProvider>
+        <AppSidebar />
 
-      <SidebarInset className="min-h-screen bg-[#faf9f6]">
-        <header className="flex h-[74px] shrink-0 items-center gap-3 border-b px-6">
-          <SidebarTrigger />
-          <Separator orientation="vertical" className="h-5" />
-          <span className="text-sm text-muted-foreground">Início</span>
+        <SidebarInset className="min-h-screen bg-[#faf9f6]">
+          <header className="flex h-[74px] shrink-0 items-center gap-3 border-b px-6">
+            <SidebarTrigger />
+            <Separator orientation="vertical" className="h-5" />
+            <span className="text-sm text-muted-foreground">Início</span>
 
-          <div className="ml-auto flex items-center gap-4">
-            <span className="text-right">
-              <span className="block text-sm font-semibold">{user.name}</span>
-              <span className="block text-[10px] font-bold tracking-widest text-[var(--verde-if)]">
-                ADMIN
+            <div className="ml-auto flex items-center gap-4">
+              <span className="text-right">
+                <span className="block text-sm font-semibold">{user.name}</span>
+                <span className="block text-[10px] font-bold tracking-widest text-[var(--verde-if)]">
+                  ADMIN
+                </span>
               </span>
-            </span>
-            <div className="flex size-10 items-center justify-center rounded-full bg-stone-200 text-sm font-semibold">
-              AD
+              <div className="flex size-10 items-center justify-center rounded-full bg-stone-200 text-sm font-semibold">
+                AD
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        {children}
-      </SidebarInset>
-    </SidebarProvider>
+          {children}
+        </SidebarInset>
+      </SidebarProvider>
+    </AuthProvider>
   );
 }
