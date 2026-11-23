@@ -23,6 +23,20 @@ export interface UsersResponse {
   total: number;
 }
 
+export interface CampusRow {
+  id: string;
+  name: string;
+  code: string;
+  address: string;
+  city: string;
+  state: string;
+  phone: string[];
+  email: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface UserRole {
   id?: string;
   name: string;
@@ -68,3 +82,9 @@ export async function GetUsers() {
   const response = await api.get<UsersResponse>("/users");
   return response.data;
 }
+
+export async function GetCampuses(): Promise<CampusRow[]> {
+  const response = await api.get<CampusRow[]>("/campus");
+  return response.data;
+}
+
