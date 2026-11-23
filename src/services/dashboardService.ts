@@ -43,6 +43,16 @@ export interface UserRole {
   slug: string;
 }
 
+export interface CreateCampusInput {
+  name: string;
+  code: string;
+  address: string;
+  city: string;
+  state: string;
+  phone: string[];
+  email: string;
+}
+
 export interface AvailableRole extends UserRole {
   id: string;
   slug: "ALUNO" | "DEPPI" | "ADMIN" | "PROFESSOR";
@@ -88,3 +98,7 @@ export async function GetCampuses(): Promise<CampusRow[]> {
   return response.data;
 }
 
+export async function CreateCampus(data: CreateCampusInput): Promise<CampusRow> {
+  const response = await api.post<CampusRow>("/campus", data);
+  return response.data;
+}

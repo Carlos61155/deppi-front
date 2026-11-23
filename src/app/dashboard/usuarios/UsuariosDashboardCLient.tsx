@@ -24,7 +24,6 @@ type UsuariosDashboardCLientProps = {
 };
 
 export default function UsuariosDashboardClient({
-  userId,
 }:UsuariosDashboardCLientProps){
   const [users, setUsers] = useState<UserRow[]>([]);
   const [total, setTotal] = useState(0);

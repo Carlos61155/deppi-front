@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,12 +13,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { GetCampuses, type CampusRow } from "@/services/dashboardService";
+import NovaInstituicaoDialog from "@/components/instituicoes/NovaInstituicaoDialog";
 
 export default function InstituicoesDashboardClient() {
   const [campuses, setCampuses] = useState<CampusRow[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     async function loadCampuses() {
@@ -58,12 +60,18 @@ export default function InstituicoesDashboardClient() {
         <Button
           type="button"
           className="h-10 gap-2 bg-orange-700 px-4 text-white hover:bg-orange-800"
-          onClick={() => window.alert("O cadastro de instituições ainda não está disponível.")}
+          onClick={() => setDialogOpen(true)}
         >
           <Plus />
           Nova instituição
         </Button>
       </div>
+
+      <NovaInstituicaoDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onCreated={(campus) => setCampuses((current) => [campus, ...current])}
+      />
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
